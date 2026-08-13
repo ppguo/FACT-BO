@@ -1,0 +1,7 @@
+include CITATION.cff.template
+include NOTICE
+include PROVENANCE.md
+recursive-include docs *.md
+recursive-include environments *.txt
+recursive-include examples *.md *.py
+recursive-include tests *.py

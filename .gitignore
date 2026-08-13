@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.DS_Store
+
+# Downloaded model and simulator assets
+tabpfn/model/tabpfn-v2-regressor.ckpt
+*.lib
+*.mdl
+*.pdk
+
+# Experiment output
+results*/
+work*/
+simulator*/
+initial/
+*.pt
+*.log
+*.mt[0-9]*
+*.prn
+*.res

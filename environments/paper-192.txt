@@ -1,0 +1,14 @@
+# Recorded from the 192-server gitbo environment on 2026-08-10.
+# This is a provenance record, not a cross-platform pip lock file.
+# Install the PyTorch build appropriate for the target CUDA driver.
+python==3.10.18
+torch==2.1.2+cu118
+botorch==0.16.1
+gpytorch==1.15.2
+numpy==1.26.4
+scipy==1.15.3
+scikit-learn==1.7.1
+matplotlib==3.10.5
+pandas==2.3.2
+einops==0.8.2
+huggingface-hub==1.17.0

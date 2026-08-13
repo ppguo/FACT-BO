@@ -1,0 +1,21 @@
+FAS-WCA research release
+========================
+
+This distribution builds on GIT-BO:
+
+  GIT-BO: High-Dimensional Bayesian Optimization with Tabular Foundation Models
+  Copyright (c) 2026 Rosen Ting-Ying Yu, Cyril Picard, Faez Ahmed
+  Licensed under the MIT License; the original license is retained in LICENSE.
+
+The GIT-BO implementation includes a small number of compatibility and
+numerical-consistency corrections. The algorithmic origin and these local
+implementation changes must remain distinguishable in downstream use.
+
+This distribution vendors the TabPFN fork shipped by the GIT-BO implementation
+and expects the TabPFN-v2 regression checkpoint to be downloaded separately.
+Built with PriorLabs-TabPFN. Consult the applicable TabPFN and model terms before
+redistribution; no model checkpoint is included here.
+
+The optional SRAM example integrates with OpenYield, an Apache-2.0 project, and
+Xyce. OpenYield source, PDK/device models, simulator binaries, metadata and
+licences are not redistributed in this repository.

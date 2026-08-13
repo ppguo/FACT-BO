@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the FAS-WCA paper and GIT-BO."
+title: "FAS-WCA"
+type: software
+version: 0.1.0
+date-released: "YYYY-MM-DD"
+authors:
+  - family-names: "TODO"
+    given-names: "TODO"
+repository-code: "TODO"
+preferred-citation:
+  type: article
+  title: "TODO: final FAS-WCA paper title"
+  authors:
+    - family-names: "TODO"
+      given-names: "TODO"
+  year: 2026
