@@ -31,6 +31,7 @@ def GITBO(
     GI_SUBSPACE = False,
     rank_r = 10,
     scale = 1.0,
+    threshold_y: float | None = None,
 ):
     """
     Bayesian Optimization using TabPFN v2 as surrogate model.
@@ -49,6 +50,11 @@ def GITBO(
     """
     print(f'Compute Setting: {DEVICE}')
     print(f'GI_SUBSPACE: {GI_SUBSPACE}, Acquisition: {Acquisition}')
+    if Acquisition == 'ST-EFMI':
+        from fas_wca.acquisition import dynamic_target
+        if threshold_y is None:
+            raise ValueError('ST-EFMI requires threshold_y in oriented objective units')
+        dynamic_target(threshold_y, threshold_y)
     tkwargs = {"device": torch.device(DEVICE), "dtype": torch.float32}
     
     if GI_SUBSPACE:
@@ -109,6 +115,7 @@ def GITBO(
         TR_LB_List = TR_UB_List = state = weights = batch_size = None
 
     grad_est = None
+    acquisition_telemetry = []
 
     # Main optimization loop
     for iter_ in range(N_iterations):
@@ -130,6 +137,8 @@ def GITBO(
             trained_Y[:ITER_IND_LOC,:], GX[:ITER_IND_LOC] if GX is not None else None, 
             X_pen.to(**tkwargs), Function, GPU_DEVICE,
             tr_lb, tr_ub, state, weights, batch_size, GPU_DEVICE, tkwargs,
+            threshold_y=threshold_y, need_gradients=GI_SUBSPACE,
+            acquisition_telemetry=acquisition_telemetry,
         )
 
         if ACQ is None and CONS is None:
@@ -202,6 +211,9 @@ def GITBO(
             'TIME_ARR': TIME_ARR.cpu().detach(),
             'MAX_ARR': MAX_ARR.cpu().detach(),
             'trained_X': trained_X.cpu().detach(),
+            'trained_Y': trained_Y.cpu().detach(),
+            'acquisition_telemetry': acquisition_telemetry,
+            'threshold_y': threshold_y,
         }, save_file_name)
 
         print(f'Save GITBO file at {save_file_name}')
@@ -241,12 +253,29 @@ def compute_acquisition_values(
     batch_size=None,
     GPU_DEVICE="cuda:0",
     tkwargs=None,
+    threshold_y=None,
+    need_gradients=True,
+    acquisition_telemetry=None,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Compute acquisition values using TabPFN v2 model, with memory‑efficient gradient estimation.
     Returns: (acquisition_values [N_PENDING×N_CANDIDATES], constraint_values=None, grad_est [N_PENDING×N_CANDIDATES×DIM])
     """
     
+    if Acquisition == 'ST-EFMI':
+        from fas_wca.acquisition import compute_spec_acquisition
+        if threshold_y is None:
+            raise ValueError('ST-EFMI requires threshold_y')
+        if GX is not None:
+            raise ValueError('ST-EFMI expects a scalar oriented objective without constraints')
+        result = compute_spec_acquisition(
+            trained_x=trained_X, trained_y=trained_Y, x_pen=X_pen,
+            theta=threshold_y, device=GPU_DEVICE, tkwargs=tkwargs,
+            need_gradients=need_gradients)
+        if acquisition_telemetry is not None:
+            acquisition_telemetry.append(result.telemetry)
+        return result.values, None, result.gradients
+
     # reset stats
     torch.cuda.reset_peak_memory_stats()
     torch.cuda.empty_cache()

@@ -20,7 +20,8 @@ class SramReadDelayProblem:
     """Maximise 4x2 SRAM read delay over a 144-D process sigma-ball.
 
     The evaluator returns seconds. The BO-facing objective returns picoseconds
-    and follows GIT-BO's maximisation convention.
+    and follows GIT-BO's maximisation convention. Invalid responses raise by
+    default; ``strict=False`` explicitly opts into the legacy guard value.
     """
 
     metric = "read_delay"
@@ -34,6 +35,7 @@ class SramReadDelayProblem:
         radius: float = 16.0,
         fill: str = "solid",
         failure_value_ps: float = 280.0,
+        strict: bool = True,
     ) -> None:
         if dimension <= 0:
             raise ValueError("dimension must be positive")
@@ -42,6 +44,7 @@ class SramReadDelayProblem:
         self.radius = radius
         self.fill = fill
         self.failure_value_ps = failure_value_ps
+        self.strict = strict
 
     def evaluate(self, unit_points: torch.Tensor, to_verify: bool = True):
         """Return ``(None, Y)`` for GIT-BO, with ``Y`` in picoseconds."""
@@ -56,6 +59,8 @@ class SramReadDelayProblem:
             delay_seconds = self.evaluator.evaluate(vector)
             delay_ps = delay_seconds * 1e12
             if not np.isfinite(delay_ps) or delay_ps <= 0.0:
+                if self.strict:
+                    raise RuntimeError(f"Invalid SRAM simulator response: {delay_seconds!r} seconds")
                 delay_ps = self.failure_value_ps
             values[index, 0] = float(delay_ps)
         return None, values.to(unit_points.device)

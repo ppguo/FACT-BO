@@ -127,6 +127,9 @@ class VanillaDirectTabPFNRegressor:
     def predict_ei(self, logits: torch.Tensor, best_f: torch.Tensor) -> torch.Tensor:
         y_mean = self.y_mean.squeeze(-1)
         y_std = self.y_std.squeeze(-1)
+        if not torch.isfinite(y_std).all() or not (y_std > 0).all():
+            raise ValueError("Training std must be finite and positive")
+        best_f = torch.as_tensor(best_f, device=logits.device, dtype=logits.dtype)
         standardized_best = ((best_f - y_mean) / y_std).expand(logits.shape[:-1])
         standardized_ei = self.bardist_.ei(logits, standardized_best)
         return standardized_ei * y_std

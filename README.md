@@ -56,7 +56,8 @@ pytest
 python tests/run_smoke.py
 ```
 
-They verify the implementation corrections used in this release, the
+They verify the corrected full-support EI by independent density quadrature,
+ST-EFMI target/scale/gradient contracts, the implementation corrections, the
 cube-to-ball mapping and the SRAM objective/evaluator contract.
 
 For an instance-level before/after demonstration that does not require the
@@ -75,6 +76,20 @@ gradient-informed subspace, see `examples/synthetic_optimization/`. These runs
 require the normal GPU/model environment; they are diagnostics rather than
 statistical benchmark claims.
 
+## Corrected ST-EFMI
+
+`GITBO(..., Acquisition="ST-EFMI", threshold_y=theta)` maximizes
+`E[(Y - max(theta, max(observed_Y)))_+]`. Orient responses and the threshold
+so larger means worse. Before failure this rewards expected exceedance severity,
+not failure probability alone. The active subspace uses posterior-mean gradients.
+The existing `EI` option retains its incumbent target and acquisition-gradient
+policy, but also uses the corrected full-support EI integral.
+
+The corrected integral includes both half-normal tail displacement terms and
+preserves positive training scales, including values below float32 epsilon.
+ST-EFMI stops on invalid scores or degenerate gradients; it does not silently
+switch to SamplingUCB. Small positive scores are not treated as zero.
+
 ## SRAM paper configuration
 
 The current paper uses a 4x2 6T-SRAM read-delay maximization problem:
@@ -89,7 +104,8 @@ The current paper uses a 4x2 6T-SRAM read-delay maximization problem:
 | candidate pool      |                    5000 |
 | subspace rank       |                       5 |
 | sampling scale      |                     1.0 |
-| acquisition         |             SamplingUCB |
+| acquisition         |                 ST-EFMI |
+| failure threshold   |                290.6 ps |
 | seeds               |                    0--4 |
 
 See `examples/sram_read_delay/README.md` for the parameterized OpenYield/Xyce

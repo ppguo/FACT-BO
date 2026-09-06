@@ -7,6 +7,8 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 from typing_extensions import override
 
+import math
+
 import torch
 from torch import nn
 
@@ -703,60 +705,35 @@ class FullSupportBarDistribution(BarDistribution):
         return 2 * normal_ei
 
     @override
-    def ei(
-        self,
-        logits: torch.Tensor,
-        best_f: torch.Tensor | float,
-        *,
-        maximize: bool = True,
-    ) -> torch.Tensor:
-        # logits: evaluation_points x batch x feature_dim
-        if torch.isnan(logits).any():
-            raise ValueError(f"logits contains NaNs: {logits}")
-        bucket_diffs = self.borders[1:] - self.borders[:-1]
-        assert maximize
-        if not torch.is_tensor(best_f) or not len(best_f.shape):  # type: ignore
-            best_f = torch.full(logits[..., 0].shape, best_f, device=logits.device)  # type: ignore
+    def ei(self, logits: torch.Tensor, best_f: torch.Tensor | float, *,
+           maximize: bool = True) -> torch.Tensor:
+        """Exact EI for uniform interior bars and half-normal outer tails.
 
-        assert best_f.shape == logits[..., 0].shape, (  # type: ignore
-            f"best_f.shape: {best_f.shape}, logits.shape: {logits.shape}"  # type: ignore
-        )
-
-        best_f_per_logit = best_f[..., None].repeat(  # type: ignore
-            *[1] * len(best_f.shape),  # type: ignore
-            logits.shape[-1],
-        )
-        clamped_best_f = best_f_per_logit.clamp(self.borders[:-1], self.borders[1:])
-
-        # true bucket contributions
-        bucket_contributions = (
-            (self.borders[1:] ** 2 - clamped_best_f**2) / 2
-            - best_f_per_logit * (self.borders[1:] - clamped_best_f)
-        ) / bucket_diffs
-
-        # extra stuff for continuous
-        side_normals = (
-            self.halfnormal_with_p_weight_before(self.bucket_widths[0]),
-            self.halfnormal_with_p_weight_before(self.bucket_widths[-1]),
-        )
-        position_in_side_normals = (
-            -(best_f - self.borders[1]).clamp(max=0.0),
-            (best_f - self.borders[-2]).clamp(min=0.0),
-        )  # evaluation_points x batch
-
-        bucket_contributions[..., -1] = self.ei_for_halfnormal(
-            side_normals[1].scale,
-            position_in_side_normals[1],
-        )
-
-        bucket_contributions[..., 0] = self.ei_for_halfnormal(
-            side_normals[0].scale,
-            torch.zeros_like(position_in_side_normals[0]),
-        ) - self.ei_for_halfnormal(side_normals[0].scale, position_in_side_normals[0])
-
-        p = torch.softmax(logits, -1)
-        return torch.einsum("...b,...b->...", p, bucket_contributions)
-
+        Float64 intermediates preserve the corrected tail displacement and
+        truncated expectation; the output retains the logits dtype.
+        """
+        if not maximize:
+            raise ValueError("ST-EFMI uses the oriented maximization response")
+        if not torch.isfinite(logits).all():
+            raise ValueError("Nonfinite logits")
+        # Float64 intermediates reduce cancellation near the half-normal origin/tails.
+        b = self.borders.to(device=logits.device, dtype=torch.float64)
+        t = torch.as_tensor(best_f, device=logits.device, dtype=torch.float64)
+        t = torch.broadcast_to(t, logits.shape[:-1])
+        width = b[1:] - b[:-1]
+        clipped = t[..., None].clamp(b[:-1], b[1:])
+        components = (b[1:]-clipped)/width * ((b[1:]+clipped)/2-t[..., None])
+        median = math.sqrt(2)*torch.erfinv(torch.tensor(0.5, device=logits.device, dtype=torch.float64))
+        sl, sr = width[0]/median, width[-1]/median
+        a = (b[1]-t).clamp_min(0)
+        z = a/sl
+        left = a*torch.erf(z/math.sqrt(2)) + sl*math.sqrt(2/math.pi)*torch.expm1(-z*z/2)
+        offset = t-b[-2]
+        z = offset.clamp_min(0)/sr
+        right = sr*math.sqrt(2/math.pi)*torch.exp(-z*z/2) - offset.clamp_min(0)*torch.erfc(z/math.sqrt(2))
+        right = right + (-offset).clamp_min(0)
+        components = torch.cat([left[..., None], components[..., 1:-1], right[..., None]], dim=-1)
+        return (logits.double().softmax(-1)*components.clamp_min(0)).sum(-1).to(logits.dtype)
 
 def get_bucket_limits(
     num_outputs: int,

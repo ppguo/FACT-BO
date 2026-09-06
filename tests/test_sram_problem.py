@@ -27,6 +27,6 @@ def test_sram_adapter_penalizes_nonconvergence():
         def evaluate(self, _vector):
             return float("nan")
 
-    problem = SramReadDelayProblem(FailedEvaluator(), dimension=2, failure_value_ps=280.0)
+    problem = SramReadDelayProblem(FailedEvaluator(), dimension=2, failure_value_ps=280.0, strict=False)
     _, values = problem.evaluate(torch.tensor([[0.25, 0.75]], dtype=torch.float32))
     assert values.item() == 280.0
