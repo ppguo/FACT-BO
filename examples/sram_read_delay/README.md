@@ -41,6 +41,10 @@ simulations plus at most two endpoint rechecks. It checks every candidate score
 against independent density quadrature and compares all selected coordinates and
 responses with the reference. A mismatch is reported without replacing points.
 Run from a clean committed checkout with the matching external checkpoint:
+The verifier records both GPU models and requires the reference PyTorch version.
+A different GPU is allowed, but can change floating-point gradients and the
+subsequent active-subspace trajectory; report numerical agreement separately
+from exact coordinate reproduction.
 
 ```bash
 python examples/sram_read_delay/verify_revision.py \
@@ -57,3 +61,9 @@ The reference directory must contain `RUN.done`, `provenance.json`,
 input hashes, simulator-call ledger, score checks, complete trajectory and
 `result.json`; inspect `matches_reference` and `full_budget` separately from
 `RUN.done`. `--iterations 2` is a short integration smoke, not a full rerun.
+An interrupted run with a closed simulator-call ledger can be supplied using
+`--resume-prefix /path/to/interrupted/output`. Source/input hashes must match and
+each adaptive point is regenerated before its observation is reused. The first
+coordinate mismatch permanently ends reuse; subsequent points are simulated.
+Recovery uses the interrupted run's GPU model. Reused observations and new calls
+are counted separately in the final result.

@@ -63,6 +63,8 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--device', default='cuda:0')
     p.add_argument('--iterations', type=int, default=270)
+    p.add_argument('--resume-prefix', type=Path,
+                   help='Reuse a validated interrupted prefix only while regenerated points match exactly')
     args = p.parse_args()
     if not 1 <= args.iterations <= 270:
         p.error('iterations must be in [1,270]')
@@ -77,6 +79,9 @@ def main():
     assert source['circuit']=='sram' and source['direction']==1
     assert source['threshold']==290.6 and source['ball_k']==16.
     assert source['rank']==5 and source['scale']==1. and source['n_pending']==5000
+    gpu = torch.cuda.get_device_name(torch.device(args.device))
+    if torch.__version__ != source['torch']:
+        raise RuntimeError(f"Reference Torch is {source['torch']}, current Torch is {torch.__version__}")
     seed = source['seed']
     initial = args.initial_dir/f'_trial_{seed}.pt'
     init = torch.load(initial, map_location='cpu', weights_only=False)
@@ -92,17 +97,45 @@ def main():
                ROOT/'tabpfn/model/tabpfn-v2-regressor.ckpt', Path(__file__),
                args.meta, args.openyield_root/'size_optimization/sample_yield_4x2.py', initial]
     hashes = {str(f.resolve()):sha(f) for f in sources}
+    prefix = []
+    prefix_provenance = None
+    if args.resume_prefix is not None:
+        previous = args.resume_prefix.resolve()
+        prefix = [json.loads(line) for line in (previous/'trace.jsonl').read_text().splitlines()]
+        prefix_provenance = json.loads((previous/'provenance.json').read_text())
+        ledger = [json.loads(line) for line in (previous/'calls.jsonl').read_text().splitlines()]
+        starts = [(r['kind'],r['call']) for r in ledger if r['event']=='started']
+        ends = [(r['kind'],r['call']) for r in ledger if r['event']=='finished']
+        assert starts==ends and len(starts)==len(set(starts)), 'unresolved prefix simulator calls'
+        assert 30 <= len(prefix) <= 30+args.iterations
+        assert prefix_provenance['seed']==seed and prefix_provenance['reference_trace_sha256']==old['trace_sha256']
+        assert prefix_provenance['gpu']==gpu, 'resume on the same GPU model as the interrupted run'
+        assert prefix[:30]==[dict(call=i+1,latent_u=r['latent_u'],objective_y=r['objective_y'],reused=True) for i,r in enumerate(rows[:30])]
+        for f in sources:
+            if f.resolve()==Path(__file__).resolve():
+                continue  # The validation driver can gain recovery support; numerical sources cannot drift.
+            suffix = str(f.relative_to(ROOT)) if f.is_relative_to(ROOT) else str(f)
+            matches = [h for name,h in prefix_provenance['hashes'].items() if name.endswith(suffix)]
+            assert len(matches)==1 and matches[0]==sha(f), f'prefix source/input drift: {f}'
+        for r in prefix[30:]:
+            assert not r['reused'] and ('search',r['call']) in ends
+            assert np.isfinite(r['objective_y']) and len(r['latent_u'])==144
     write(out/'provenance.json', dict(commit=commit, reference=str(reference),
         reference_trace_sha256=old['trace_sha256'], seed=seed, dimension=144,
         threshold_ps=290.6, radius=16., rank=5, scale=1., n_pending=5000,
         requested_evaluations=30+args.iterations, initial_reused=30, torch=torch.__version__,
-        device=args.device, gpu=torch.cuda.get_device_name(), hashes=hashes))
+        device=args.device, gpu=gpu, reference_gpu=source['gpu'],
+        hardware_matches_reference=gpu==source['gpu'], hashes=hashes,
+        resume_prefix=None if args.resume_prefix is None else str(args.resume_prefix.resolve()),
+        resume_trace_sha256=None if args.resume_prefix is None else sha(args.resume_prefix/'trace.jsonl')))
     command = [str(args.worker_python), str(Path(__file__).with_name('openyield_worker.py')),
         '--openyield-root',str(args.openyield_root), '--meta',str(args.meta),
         '--workdir',str(out/'simulator')]
     evaluator = LineProcessEvaluator(command, out/'worker')
     physical = SramReadDelayProblem(evaluator)
     observed_rows, checks, capture = [], [], {}
+    prefix_active = bool(prefix)
+    prefix_reused = 0
     original_compute = optimizer.compute_acquisition_values
     original_wrapper = wrapper_module.VanillaDirectTabPFNRegressor
     original_load = torch.load
@@ -148,6 +181,7 @@ def main():
     class Problem:
         dim=144
         def evaluate(self, x):
+            nonlocal prefix_active, prefix_reused
             if not observed_rows:
                 assert np.array_equal(array(x).astype(float),array(init).astype(float))
                 for i,row in enumerate(rows[:30]):
@@ -156,6 +190,16 @@ def main():
                 return None,x.new_tensor([[r['objective_y']] for r in rows[:30]])
             assert len(x)==1 and np.array_equal(array(x[0]).astype(float),capture['candidate'])
             call=len(observed_rows)+1
+            if prefix_active and call<=len(prefix):
+                previous=prefix[call-1]
+                if np.array_equal(array(x[0]).astype(float),previous['latent_u']):
+                    item={**previous,'reused':True,'reuse_kind':'exact_adaptive_prefix'}
+                    observed_rows.append(item);append(out/'trace.jsonl',item)
+                    prefix_reused+=1
+                    print(json.dumps(dict(call=call,reused='exact_adaptive_prefix')),flush=True)
+                    return None,x.new_tensor([[previous['objective_y']]])
+                prefix_active=False
+                write(out/'PREFIX_DIVERGENCE.json',dict(call=call,reason='stop reuse; evaluate regenerated point and all following points'))
             append(out/'calls.jsonl',dict(call=call,event='started',kind='search'))
             start=time.monotonic()
             _,y=physical.evaluate(x)
@@ -198,7 +242,9 @@ def main():
         assert all(not r['fallback'] for r in payload['acquisition_telemetry'])
         assert hashes=={str(f.resolve()):sha(f) for f in sources}
         result=dict(commit=commit,complete=True,full_budget=args.iterations==270,seed=seed,
-            evaluations=len(observed_rows),initial_reused=30,new_search_calls=args.iterations,
+            evaluations=len(observed_rows),initial_reused=30,adaptive_prefix_reused=prefix_reused,
+            new_search_calls=args.iterations-prefix_reused,
+            effective_search_evaluations=30+prefix_reused+(args.iterations-prefix_reused),
             recheck_calls=len(rechecks),simulator_errors=0,fallback_count=0,
             first_failure_call=first,reference_first_failure_call=old['first_failure_call'],
             final_worst_ps=best,reference_final_worst_ps=old['final_worst_metric'],
@@ -206,6 +252,9 @@ def main():
             max_paired_y_abs_error_ps=max_y_error,rechecks=rechecks,
             max_standardized_score_error=max(c['max_abs_error'] for c in checks),
             source_hashes_unchanged=True,trace_sha256=sha(out/'trace.jsonl'))
+        result['gpu']=gpu
+        result['reference_gpu']=source['gpu']
+        result['hardware_matches_reference']=gpu==source['gpu']
         result['checkpoint_paths']=sorted(set(checkpoint_loads))
         result['matches_reference']=not differences and max_y_error==0 and first==old['first_failure_call']
         write(out/'result.json',result)
