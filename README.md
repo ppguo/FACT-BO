@@ -1,6 +1,11 @@
-# FAS-WCA
+# FACT-BO
 
-FAS-WCA is a research implementation of an AMS worst-case-analysis workflow
+Repository: https://github.com/ppguo/FACT-BO
+
+The repository was renamed from FAS-WCA. The Python distribution name `fas-wca`
+and import package `fas_wca` are retained for compatibility.
+
+FACT-BO is a research implementation of an AMS worst-case-analysis workflow
 built on the GIT-BO optimizer: a frozen TabPFN-v2 surrogate supplies gradients,
 a gradient-informed active subspace concentrates candidate generation, and a
 SPICE/Xyce evaluator closes the optimization loop over a physical process
@@ -14,7 +19,7 @@ Foundation Models* (ICLR 2026).
 The SRAM simulation path integrates with
 [OpenYield](https://github.com/ShenShan123/OpenYield), an Apache-2.0 SRAM yield
 analysis framework. OpenYield supplies the external 4x2 SRAM sampling and
-Xyce-facing evaluation flow; FAS-WCA supplies the worst-case search, sigma-ball
+Xyce-facing evaluation flow; FACT-BO supplies the worst-case search, sigma-ball
 mapping, and the process boundary between the optimizer and simulator. OpenYield
 source, PDK/device models, simulator binaries, and private SRAM metadata are not
 redistributed here.
