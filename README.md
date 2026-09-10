@@ -1,7 +1,5 @@
 # FACT-BO
 
-Repository: https://github.com/ppguo/FACT-BO
-
 Built with TabPFN.
 
 FACT-BO is a research implementation of an AMS worst-case-analysis workflow
