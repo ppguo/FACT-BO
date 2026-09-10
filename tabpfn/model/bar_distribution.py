@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 #  Copyright (c) Prior Labs GmbH 2025.
 
 # TODO: This module needs some tidying

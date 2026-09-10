@@ -2,6 +2,8 @@
 
 Repository: https://github.com/ppguo/FACT-BO
 
+Built with TabPFN.
+
 FACT-BO is a research implementation of an AMS worst-case-analysis workflow
 built on the GIT-BO optimizer: a frozen TabPFN-v2 surrogate supplies gradients,
 a gradient-informed active subspace concentrates candidate generation, and a
@@ -148,9 +150,10 @@ Upstream projects used by this implementation:
   [ShenShan123/OpenYield](https://github.com/ShenShan123/OpenYield)
   (Apache-2.0).
 
-GIT-BO code is redistributed under its MIT license. Preserve `LICENSE`,
-`NOTICE`, and the attribution in derivative releases. TabPFN, its checkpoint,
-OpenYield, Xyce and any device models remain subject to their own terms.
+FACT-BO code and the adapted GIT-BO optimizer use the MIT license in `LICENSE`.
+The vendored TabPFN source uses the Prior Labs License v1.0 in `tabpfn/LICENSE`,
+including its attribution requirements. Preserve both licenses and the notices
+in derivative distributions. Model weights, OpenYield, Xyce and device models
+remain subject to their own terms and are not included.
 
-Before the first public tag, replace the generic package author entry with the
-paper author list and add the final paper DOI/arXiv metadata in `CITATION.cff`.
+Citation metadata is provided in `CITATION.cff`.

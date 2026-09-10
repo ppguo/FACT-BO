@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite FACT-BO and GIT-BO."
+title: "FACT-BO"
+type: software
+version: 0.1.0
+authors: &authors
+  - family-names: Guo
+    given-names: Nanlin
+  - family-names: Shen
+    given-names: Shan
+  - family-names: Tao
+    given-names: Jun
+  - family-names: Xing
+    given-names: "Wei W."
+repository-code: "https://github.com/ppguo/FACT-BO"
+preferred-citation:
+  type: article
+  title: "Beyond the Box: Calibrated Worst-Case Search for High-Dimensional Analog/Mixed-Signal Circuits"
+  authors: *authors
+  year: 2026

@@ -1,4 +1,6 @@
-include CITATION.cff.template
+include CITATION.cff
+include tabpfn/LICENSE
+include tabpfn/NOTICE
 include NOTICE
 include PROVENANCE.md
 recursive-include docs *.md

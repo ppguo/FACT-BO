@@ -1,0 +1,20 @@
+Built with TabPFN.
+Copyright (c) Prior Labs GmbH 2025.
+
+This directory contains the TabPFN fork distributed through GIT-BO and adapted
+for the FACT-BO integration. It is not an unmodified upstream distribution.
+Files that differ from the upstream 2.0.3 source carry modification notices.
+Original copyright notices are retained.
+
+License: Prior Labs License v1.0, January 2025; see LICENSE in this directory.
+The license text is reproduced verbatim from the official TabPFN 2.0.3 source
+release on PyPI: https://pypi.org/project/tabpfn/2.0.3/
+Source archive SHA-256:
+6884b1bd30100852f5b37e3ae54d862eddb5eb002da67ac57422c800abdbbc09
+
+Source: https://github.com/PriorLabs/TabPFN
+GIT-BO integration: https://github.com/rosenyu304/GITBO
+
+Local changes include query handling, expected-improvement integration,
+positive-scale handling and compatibility adjustments. Model weights are not
+redistributed. See the project PROVENANCE.md for implementation context.

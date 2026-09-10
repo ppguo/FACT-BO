@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 from importlib.metadata import version
 
 from tabpfn.classifier import TabPFNClassifier

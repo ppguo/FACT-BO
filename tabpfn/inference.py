@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 """Module that defines different ways to run inference with TabPFN."""
 
 #  Copyright (c) Prior Labs GmbH 2025.

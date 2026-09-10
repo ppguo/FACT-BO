@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 # ruff: noqa
 # mypy: ignore-errors
 # taken from https://github.com/sklearn-compat/sklearn-compat

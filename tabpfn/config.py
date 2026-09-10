@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 """Configuration for the model interfaces."""
 
 #  Copyright (c) Prior Labs GmbH 2025.

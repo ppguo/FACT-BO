@@ -1,4 +1,4 @@
-FAS-WCA research release
+FACT-BO research release
 ========================
 
 This distribution builds on GIT-BO:
@@ -13,8 +13,9 @@ implementation changes must remain distinguishable in downstream use.
 
 This distribution vendors the TabPFN fork shipped by the GIT-BO implementation
 and expects the TabPFN-v2 regression checkpoint to be downloaded separately.
-Built with PriorLabs-TabPFN. Consult the applicable TabPFN and model terms before
-redistribution; no model checkpoint is included here.
+Built with TabPFN. The vendored source is covered by the Prior Labs License
+v1.0 (January 2025) in tabpfn/LICENSE. See tabpfn/NOTICE for its provenance
+and modification notices. The model checkpoint is not included.
 
 The optional SRAM example integrates with OpenYield, an Apache-2.0 project, and
 Xyce. OpenYield source, PDK/device models, simulator binaries, metadata and

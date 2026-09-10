@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 # ruff: noqa
 """This file is taken from PyTorch and modified to work with TabPFN, also
 inspired from sklearn's show_versions function. This collects useful debug

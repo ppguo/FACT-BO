@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 """Defines the preprocessing configurations that define the ensembling of
 different members.
 """

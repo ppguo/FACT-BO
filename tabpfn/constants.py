@@ -1,3 +1,4 @@
+# Modified vendored TabPFN code for the GIT-BO/FACT-BO integration; see NOTICE.
 """Various constants used throughout the library."""
 
 #  Copyright (c) Prior Labs GmbH 2025.
