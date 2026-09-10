@@ -1,4 +1,4 @@
-"""Specification-triggered expected failure-margin improvement (ST-EFMI)."""
+"""Expected failure-margin improvement (EFMI)."""
 
 from dataclasses import dataclass
 import math
@@ -24,9 +24,9 @@ def compute_spec_acquisition(*, trained_x, trained_y, x_pen, theta, device,
                              tkwargs, need_gradients=True):
     """Compute E[(Y-max(theta,Y_best))+] and posterior-mean gradients.
 
-    This is the corrected experimental forward/gradient path. Invalid scores
-    or degenerate requested gradients stop the run instead of switching the
-    acquisition policy. Small positive EI values are retained in physical units.
+    Invalid scores or degenerate requested gradients stop the run instead of
+    switching the acquisition policy. Small positive EI values are retained
+    in physical units.
     """
     from algorithms.tabpfn_wrapper import VanillaDirectTabPFNRegressor
 
@@ -48,9 +48,9 @@ def compute_spec_acquisition(*, trained_x, trained_y, x_pen, theta, device,
         if tuple(mu.shape) != expected or tuple(values.shape) != expected:
             raise AssertionError("Posterior/acquisition rows do not match candidates")
         if not torch.isfinite(values).all() or (values < 0).any():
-            raise FloatingPointError("ST-EFMI values must be finite and nonnegative")
+            raise FloatingPointError("EFMI values must be finite and nonnegative")
         if not (values > 0).any():
-            raise FloatingPointError("All ST-EFMI values are zero")
+            raise FloatingPointError("All EFMI values are zero")
         gradients = None
         if need_gradients:
             gradients, = torch.autograd.grad(mu.sum(), x_cand)
@@ -61,7 +61,7 @@ def compute_spec_acquisition(*, trained_x, trained_y, x_pen, theta, device,
         "target_y": target,
         "incumbent_y_before": float(trained_y.max().detach().cpu()),
         "failure_found_before": found,
-        "acquisition": "ST-EFMI",
+        "acquisition": "EFMI",
         "gradient_source": "posterior_mean" if need_gradients else "not_requested_no_subspace",
         "gradient_requested": bool(need_gradients),
         "gradient_computed": gradients is not None,

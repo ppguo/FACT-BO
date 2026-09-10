@@ -48,7 +48,7 @@ def main() -> int:
     parser.add_argument("--radius", type=float, default=16.0)
     parser.add_argument("--fill", choices=("solid", "surface"), default="solid")
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--acquisition", choices=("ST-EFMI", "SamplingUCB", "EI"), default="ST-EFMI")
+    parser.add_argument("--acquisition", choices=("EFMI", "ST-EFMI", "SamplingUCB", "EI"), default="EFMI")
     parser.add_argument("--threshold-ps", type=float, default=290.6)
     args = parser.parse_args()
 

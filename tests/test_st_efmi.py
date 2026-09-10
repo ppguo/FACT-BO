@@ -115,7 +115,8 @@ def test_full_chain_tiny_scale_permutation_and_gradient(monkeypatch):
         torch.testing.assert_close(original.gradients[...,d], fd, atol=3e-4, rtol=2e-3)
 
 
-def test_public_acquisition_dispatch_and_invalid_simulator(monkeypatch):
+@pytest.mark.parametrize('acquisition', ['EFMI', 'ST-EFMI'])
+def test_public_acquisition_dispatch_and_invalid_simulator(monkeypatch, acquisition):
     import algorithms._GITBO as loop
     import algorithms.tabpfn_wrapper as module
     from fas_wca.sram import SramReadDelayProblem
@@ -123,13 +124,14 @@ def test_public_acquisition_dispatch_and_invalid_simulator(monkeypatch):
     x = torch.tensor([[[.1,.2]], [[.4,.7]], [[.8,.3]]])
     telemetry = []
     values, constraints, grad = loop.compute_acquisition_values(
-        'ST-EFMI', 2, None, 3, 1, None, torch.zeros(3,2), torch.zeros(3,1), None,
+        acquisition, 2, None, 3, 1, None, torch.zeros(3,2), torch.zeros(3,1), None,
         x, None, 'cpu', GPU_DEVICE='cpu', tkwargs={'device':torch.device('cpu'),'dtype':torch.float32},
         threshold_y=.25, acquisition_telemetry=telemetry)
     ref = compute(x)
     torch.testing.assert_close(values, ref.values)
     torch.testing.assert_close(grad, ref.gradients)
     assert constraints is None and telemetry[0]['gradient_source']=='posterior_mean'
+    assert telemetry[0]['acquisition'] == 'EFMI'
     class Failed:
         def evaluate(self, vector): return float('nan')
     with pytest.raises(RuntimeError, match='simulator'):
@@ -137,7 +139,8 @@ def test_public_acquisition_dispatch_and_invalid_simulator(monkeypatch):
 
 
 @pytest.mark.parametrize('subspace', [False, True])
-def test_public_optimizer_closes_and_saves_observed_targets(monkeypatch, tmp_path, subspace):
+@pytest.mark.parametrize('acquisition', ['EFMI', 'ST-EFMI'])
+def test_public_optimizer_closes_and_saves_observed_targets(monkeypatch, tmp_path, subspace, acquisition):
     import algorithms._GITBO as loop
     import algorithms.tabpfn_wrapper as module
     monkeypatch.setattr(module, 'VanillaDirectTabPFNRegressor', AnalyticRegressor)
@@ -145,7 +148,7 @@ def test_public_optimizer_closes_and_saves_observed_targets(monkeypatch, tmp_pat
     class Objective:
         dim=2
         def evaluate(self, x): return None, x.sum(-1,keepdim=True)
-    points, history = loop.GITBO(Objective(),0,N_iterations=3,Acquisition='ST-EFMI',
+    points, history = loop.GITBO(Objective(),0,N_iterations=3,Acquisition=acquisition,
         threshold_y=1.2,INITIAL_DIR=str(tmp_path),SAVE_DIR=str(tmp_path/'output'),
         N_PENDING=8,DEVICE='cpu',GPU_DEVICE='cpu',GI_SUBSPACE=subspace,rank_r=1)
     assert tuple(points.shape)==(6,2) and tuple(history.shape)==(3,)
@@ -153,6 +156,7 @@ def test_public_optimizer_closes_and_saves_observed_targets(monkeypatch, tmp_pat
     torch.testing.assert_close(saved['trained_Y'],points.sum(-1,keepdim=True))
     assert len(saved['acquisition_telemetry'])==3
     for i,row in enumerate(saved['acquisition_telemetry']):
+        assert row['acquisition'] == 'EFMI'
         assert row['target_y']==max(1.2,float(saved['trained_Y'][:3+i].max()))
         assert row['gradient_computed']==subspace and not row['fallback']
 

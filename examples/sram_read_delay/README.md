@@ -26,7 +26,7 @@ CUDA_VISIBLE_DEVICES=0 python examples/sram_read_delay/run.py \
 ```
 
 Defaults reproduce the paper-level settings: 30 initial evaluations, 270 BO
-iterations, 5000 candidates, rank 5, scale 1.0, the solid `K=16` sigma-ball, and ST-EFMI at `--threshold-ps 290.6`.
+iterations, 5000 candidates, rank 5, scale 1.0, the solid `K=16` sigma-ball, and EFMI at `--threshold-ps 290.6`.
 Use `--acquisition SamplingUCB` to select the earlier acquisition. Invalid
 simulator outputs stop the default SRAM adapter; they are not physical failures.
 For bit-level paper reproduction, supply the archived initial designs with

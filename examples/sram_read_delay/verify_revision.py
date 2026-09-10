@@ -217,7 +217,7 @@ def main():
         wrapper_module.VanillaDirectTabPFNRegressor=ObservedRegressor
         optimizer.compute_acquisition_values=observed_compute
         points,history=optimizer.GITBO(Problem(),seed,Trail_N=seed,N_iterations=args.iterations,
-            Acquisition='ST-EFMI',threshold_y=290.6,INITIAL_DIR=str(args.initial_dir),
+            Acquisition='EFMI',threshold_y=290.6,INITIAL_DIR=str(args.initial_dir),
             SAVE_DIR=str(out/'results'),N_PENDING=5000,N_CANDIDATES=1,DEVICE=args.device,
             GPU_DEVICE=args.device,GI_SUBSPACE=True,rank_r=5,scale=1.)
         assert len(observed_rows)==30+args.iterations and len(checks)==args.iterations

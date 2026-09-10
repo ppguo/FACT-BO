@@ -50,10 +50,10 @@ def GITBO(
     """
     print(f'Compute Setting: {DEVICE}')
     print(f'GI_SUBSPACE: {GI_SUBSPACE}, Acquisition: {Acquisition}')
-    if Acquisition == 'ST-EFMI':
+    if Acquisition in ('EFMI', 'ST-EFMI'):
         from fas_wca.acquisition import dynamic_target
         if threshold_y is None:
-            raise ValueError('ST-EFMI requires threshold_y in oriented objective units')
+            raise ValueError('EFMI requires threshold_y in oriented objective units')
         dynamic_target(threshold_y, threshold_y)
     tkwargs = {"device": torch.device(DEVICE), "dtype": torch.float32}
     
@@ -262,12 +262,12 @@ def compute_acquisition_values(
     Returns: (acquisition_values [N_PENDING×N_CANDIDATES], constraint_values=None, grad_est [N_PENDING×N_CANDIDATES×DIM])
     """
     
-    if Acquisition == 'ST-EFMI':
+    if Acquisition in ('EFMI', 'ST-EFMI'):
         from fas_wca.acquisition import compute_spec_acquisition
         if threshold_y is None:
-            raise ValueError('ST-EFMI requires threshold_y')
+            raise ValueError('EFMI requires threshold_y')
         if GX is not None:
-            raise ValueError('ST-EFMI expects a scalar oriented objective without constraints')
+            raise ValueError('EFMI expects a scalar oriented objective without constraints')
         result = compute_spec_acquisition(
             trained_x=trained_X, trained_y=trained_Y, x_pen=X_pen,
             theta=threshold_y, device=GPU_DEVICE, tkwargs=tkwargs,
