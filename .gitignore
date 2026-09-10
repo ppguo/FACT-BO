@@ -15,6 +15,7 @@ tabpfn/model/tabpfn-v2-regressor.ckpt
 # Experiment output
 results*/
 work*/
+!/.github/workflows/
 simulator*/
 initial/
 *.pt
