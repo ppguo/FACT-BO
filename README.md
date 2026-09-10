@@ -2,9 +2,6 @@
 
 Repository: https://github.com/ppguo/FACT-BO
 
-The repository was renamed from FAS-WCA. The Python distribution name `fas-wca`
-and import package `fas_wca` are retained for compatibility.
-
 FACT-BO is a research implementation of an AMS worst-case-analysis workflow
 built on the GIT-BO optimizer: a frozen TabPFN-v2 surrogate supplies gradients,
 a gradient-informed active subspace concentrates candidate generation, and a
