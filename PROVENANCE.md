@@ -32,4 +32,4 @@ patch; positive response scales are preserved. Added an explicit specification
 threshold and posterior-mean-gradient ST-EFMI path to the public optimizer,
 independent quadrature and decision-chain tests, and strict SRAM error handling.
 Legacy EI and UCB policy names remain available. The default SRAM example now
-uses ST-EFMI at 290.6 ps. Models, PDKs and private experiment data remain external.
+uses EFMI at 290.8 ps. Models, PDKs and private experiment data remain external.

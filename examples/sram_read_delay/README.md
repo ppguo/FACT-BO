@@ -26,7 +26,7 @@ CUDA_VISIBLE_DEVICES=0 python examples/sram_read_delay/run.py \
 ```
 
 Defaults reproduce the paper-level settings: 30 initial evaluations, 270 BO
-iterations, 5000 candidates, rank 5, scale 1.0, the solid `K=16` sigma-ball, and EFMI at `--threshold-ps 290.6`.
+iterations, 5000 candidates, rank 5, scale 1.0, the solid `K=16` sigma-ball, and EFMI at `--threshold-ps 290.8`.
 Use `--acquisition SamplingUCB` to select the earlier acquisition. Invalid
 simulator outputs stop the default SRAM adapter; they are not physical failures.
 For bit-level paper reproduction, supply the archived initial designs with
@@ -57,7 +57,8 @@ python examples/sram_read_delay/verify_revision.py \
 ```
 
 The reference directory must contain `RUN.done`, `provenance.json`,
-`result.json`, and `trace.jsonl`. The output records the Git commit, source and
+`result.json`, and `trace.jsonl`, with a threshold of 290.8 ps in its provenance.
+Resumed prefixes must use the same threshold. The output records the Git commit, source and
 input hashes, simulator-call ledger, score checks, complete trajectory and
 `result.json`; inspect `matches_reference` and `full_budget` separately from
 `RUN.done`. `--iterations 2` is a short integration smoke, not a full rerun.

@@ -49,7 +49,7 @@ def main() -> int:
     parser.add_argument("--fill", choices=("solid", "surface"), default="solid")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--acquisition", choices=("EFMI", "ST-EFMI", "SamplingUCB", "EI"), default="EFMI")
-    parser.add_argument("--threshold-ps", type=float, default=290.6)
+    parser.add_argument("--threshold-ps", type=float, default=290.8)
     args = parser.parse_args()
 
     run_dir = args.workdir.resolve()

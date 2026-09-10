@@ -109,7 +109,7 @@ The current paper uses a 4x2 6T-SRAM read-delay maximization problem:
 | subspace rank       |                       5 |
 | sampling scale      |                     1.0 |
 | acquisition         |                 EFMI |
-| failure threshold   |                290.6 ps |
+| failure threshold   |                290.8 ps |
 | seeds               |                    0--4 |
 
 See `examples/sram_read_delay/README.md` for the parameterized OpenYield/Xyce

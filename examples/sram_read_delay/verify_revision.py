@@ -77,7 +77,7 @@ def main():
     assert (reference/'RUN.done').exists() and len(rows)==300
     assert sha(reference/'trace.jsonl')==old['trace_sha256']
     assert source['circuit']=='sram' and source['direction']==1
-    assert source['threshold']==290.6 and source['ball_k']==16.
+    assert source['threshold']==290.8 and source['ball_k']==16.
     assert source['rank']==5 and source['scale']==1. and source['n_pending']==5000
     gpu = torch.cuda.get_device_name(torch.device(args.device))
     if torch.__version__ != source['torch']:
@@ -109,6 +109,7 @@ def main():
         assert starts==ends and len(starts)==len(set(starts)), 'unresolved prefix simulator calls'
         assert 30 <= len(prefix) <= 30+args.iterations
         assert prefix_provenance['seed']==seed and prefix_provenance['reference_trace_sha256']==old['trace_sha256']
+        assert prefix_provenance['threshold_ps']==290.8, 'resume threshold must match the current SRAM threshold'
         assert prefix_provenance['gpu']==gpu, 'resume on the same GPU model as the interrupted run'
         assert prefix[:30]==[dict(call=i+1,latent_u=r['latent_u'],objective_y=r['objective_y'],reused=True) for i,r in enumerate(rows[:30])]
         for f in sources:
@@ -122,7 +123,7 @@ def main():
             assert np.isfinite(r['objective_y']) and len(r['latent_u'])==144
     write(out/'provenance.json', dict(commit=commit, reference=str(reference),
         reference_trace_sha256=old['trace_sha256'], seed=seed, dimension=144,
-        threshold_ps=290.6, radius=16., rank=5, scale=1., n_pending=5000,
+        threshold_ps=290.8, radius=16., rank=5, scale=1., n_pending=5000,
         requested_evaluations=30+args.iterations, initial_reused=30, torch=torch.__version__,
         device=args.device, gpu=gpu, reference_gpu=source['gpu'],
         hardware_matches_reference=gpu==source['gpu'], hashes=hashes,
@@ -171,7 +172,7 @@ def main():
             reference_candidate_exact=bool(np.array_equal(chosen,rows[30+i]['latent_u'])),
             quadrature_error_bound=float(error.max()))
         assert check['pass'] and check['argmax_pass']
-        assert target==max(290.6,max(r['objective_y'] for r in observed_rows))
+        assert target==max(290.8,max(r['objective_y'] for r in observed_rows))
         capture['candidate'] = chosen
         np.savez_compressed(out/f'score_{i:03d}.npz', values=array(values),reference=ref,
             std=std, target=z, borders=capture['borders'], selected_logits=capture['logits'][index])
@@ -217,13 +218,13 @@ def main():
         wrapper_module.VanillaDirectTabPFNRegressor=ObservedRegressor
         optimizer.compute_acquisition_values=observed_compute
         points,history=optimizer.GITBO(Problem(),seed,Trail_N=seed,N_iterations=args.iterations,
-            Acquisition='EFMI',threshold_y=290.6,INITIAL_DIR=str(args.initial_dir),
+            Acquisition='EFMI',threshold_y=290.8,INITIAL_DIR=str(args.initial_dir),
             SAVE_DIR=str(out/'results'),N_PENDING=5000,N_CANDIDATES=1,DEVICE=args.device,
             GPU_DEVICE=args.device,GI_SUBSPACE=True,rank_r=5,scale=1.)
         assert len(observed_rows)==30+args.iterations and len(checks)==args.iterations
         assert len(checkpoint_loads)==args.iterations
         assert np.array_equal(array(points).astype(float),[r['latent_u'] for r in observed_rows])
-        first=next((r['call'] for r in observed_rows if r['objective_y']>290.6),None)
+        first=next((r['call'] for r in observed_rows if r['objective_y']>290.8),None)
         worst=max(range(len(observed_rows)),key=lambda i:observed_rows[i]['objective_y'])
         rechecks=[]
         for i in sorted({worst}|({first-1} if first is not None else set())):
